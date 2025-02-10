@@ -22,8 +22,26 @@ public final class Builder {
      * @return the employee object
      */
     public static IEmployee buildEmployeeFromCSV(String csv) {
+        String[] parts = csv.split(",");
+        if (parts.length != 7) {
+            throw new IllegalArgumentException("Invalid CSV format for Employee");
+        }
 
-        return null;
+        String type = parts[0].trim();
+        String name = parts[1].trim();
+        String id = parts[2].trim();
+        double payRate = Double.parseDouble(parts[3].trim());
+        double pretaxDeductions = Double.parseDouble(parts[4].trim());
+        double ytdEarnings = Double.parseDouble(parts[5].trim());
+        double ytdTaxesPaid = Double.parseDouble(parts[6].trim());
+
+        if ("HOURLY".equalsIgnoreCase(type)) {
+            return new HourlyEmployee(name, id, payRate, ytdEarnings, ytdTaxesPaid, pretaxDeductions);
+        } else if ("SALARY".equalsIgnoreCase(type)) {
+            return new SalaryEmployee(name, id, payRate, ytdEarnings, ytdTaxesPaid, pretaxDeductions);
+        } else {
+            throw new IllegalArgumentException("Unknown employee type: " + type);
+        }
     }
 
 
@@ -34,8 +52,12 @@ public final class Builder {
      * @param csv csv string
      * @return a TimeCard object
      */
-    public static ITimeCard buildTimeCardFromCSV(String csv) {
-    
-        return null;
-    }
+   public static ITimeCard buildTimeCardFromCSV(String csv) {
+       String[] parts = csv.split(",");
+       if (parts.length != 2) {
+           throw new IllegalArgumentException("Invalid CSV format for TimeCard");
+       }
+       return new TimeCard(parts[0].trim(), Double.parseDouble(parts[1].trim()));
+
+   }
 }

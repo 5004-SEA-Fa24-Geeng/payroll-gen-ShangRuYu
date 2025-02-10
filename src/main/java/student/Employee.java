@@ -62,10 +62,17 @@ public abstract class Employee implements IEmployee {
         }
 
         BigDecimal grossPay = calculateGrossPay(hoursWorked);
-        BigDecimal taxableIncome = grossPay.subtract(pretaxDeductions).max(BigDecimal.ZERO);
-        BigDecimal taxRate = new BigDecimal(String.valueOf(0.2265));
-        BigDecimal taxes = taxableIncome.multiply(taxRate).setScale(2, RoundingMode.HALF_EVEN);
-        BigDecimal netPay = taxableIncome.subtract(taxes).max(BigDecimal.ZERO);
+        grossPay = grossPay.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal taxableIncome = grossPay.subtract(pretaxDeductions).setScale(2, RoundingMode.HALF_UP).max(BigDecimal.ZERO);
+        BigDecimal taxRate = new BigDecimal(Double.toString(0.2265));
+        BigDecimal taxes = taxableIncome.multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal netPay = taxableIncome.subtract(taxes).setScale(2,RoundingMode.HALF_UP);
+
+        BigDecimal currentYtdEarnings = ytdEarnings.subtract(grossPay);
+        BigDecimal currentYtdTaxesPaid = ytdTaxesPaid.subtract(taxes);
+
+        ytdEarnings = currentYtdEarnings.add(grossPay).setScale(2, RoundingMode.HALF_UP);
+        ytdTaxesPaid = currentYtdTaxesPaid.add(taxes).setScale(2, RoundingMode.HALF_UP);
 
 
         return new PayStub(name, netPay.doubleValue(), taxes.doubleValue(), ytdEarnings.doubleValue(), ytdTaxesPaid.doubleValue());

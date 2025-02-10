@@ -10,9 +10,9 @@ class HourlyEmployee extends Employee {
 
     @Override
     protected BigDecimal calculateGrossPay(double hoursWorked) {
-        BigDecimal regularHours = BigDecimal.valueOf(Math.min(40, hoursWorked));
-        BigDecimal overtimeHours = BigDecimal.valueOf(Math.max(0, hoursWorked - 40));
-        BigDecimal overtimeRate = payRate.multiply(BigDecimal.valueOf(1.5));
+        BigDecimal regularHours = BigDecimal.valueOf(Math.min(40, hoursWorked)).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal overtimeHours = BigDecimal.valueOf(Math.max(0, hoursWorked - 40)).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal overtimeRate = payRate.multiply(new BigDecimal("1.5")).setScale(2, RoundingMode.HALF_UP);
 
         return regularHours.multiply(payRate).add(overtimeHours.multiply(overtimeRate)).setScale(2, RoundingMode.HALF_UP);
     }

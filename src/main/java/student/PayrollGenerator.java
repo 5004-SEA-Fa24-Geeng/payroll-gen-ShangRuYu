@@ -69,18 +69,24 @@ public final class PayrollGenerator {
         // as it is invalid, but if is 0, you still generate a paystub, but the amount is 0.
 
         //YOUR CODE HERE
-        for (ITimeCard timeCard : timeCardList) {
-            IEmployee employee = employees.stream()
-                    .filter(e -> e.getID().equals(timeCard.getEmployeeID()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (employee != null) {
-                IPayStub payStub = employee.runPayroll(timeCard.getHoursWorked());
-                if (payStub != null) {
-                    payStubs.add(payStub);
+        try {
+            for (ITimeCard timeCard: timeCardList) {
+                double hoursWorked = timeCard.getHoursWorked();
+                if (hoursWorked < 0) {
+                    continue;
                 }
+                IEmployee matchedEmployee = employees.stream()
+                        .filter(emp -> emp.getID().equals(timeCard.getEmployeeID()))
+                        .findFirst()
+                        .orElse(null);
+                if (matchedEmployee == null) {
+                    continue;
+                }
+                IPayStub payStub = matchedEmployee.runPayroll(hoursWorked);
+                payStubs.add(payStub);
             }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Caught Exception: " + e.getMessage());
         }
       
 

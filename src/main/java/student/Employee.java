@@ -3,23 +3,35 @@ package student;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+// Abstract base class for all employee types that implements the IEmployee interface.
 public abstract class Employee implements IEmployee {
-    protected String name;
-    protected String id;
-    protected BigDecimal payRate;
-    protected BigDecimal ytdEarnings;
-    protected BigDecimal ytdTaxesPaid;
-    protected BigDecimal pretaxDeductions;
+    private String name;
+    private String id;
+    private double payRate;
+    private double ytdEarnings;
+    private double ytdTaxesPaid;
+    private double pretaxDeductions;
 
+    /**
+     * Constructor for Employee
+     * @param name Employee's name
+     * @param id Employee's id
+     * @param payRate Employee's pay rate
+     * @param ytdEarnings Employee's year-to-date earnings
+     * @param ytdTaxesPaid Employee's year-to-date taxes paid
+     * @param pretaxDeductions Employee's pretax deductions
+     */
     public Employee(String name, String id, double payRate, double ytdEarnings, double ytdTaxesPaid, double pretaxDeductions) {
+
         this.name = name;
         this.id = id;
-        this.payRate = BigDecimal.valueOf(payRate).setScale(2, RoundingMode.HALF_UP);
-        this.ytdEarnings = BigDecimal.valueOf(ytdEarnings).setScale(2, RoundingMode.HALF_UP);
-        this.ytdTaxesPaid = BigDecimal.valueOf(ytdTaxesPaid).setScale(2, RoundingMode.HALF_UP);
-        this.pretaxDeductions = BigDecimal.valueOf(pretaxDeductions).setScale(2, RoundingMode.HALF_UP);
+        this.payRate = payRate;
+        this.ytdEarnings = ytdEarnings;
+        this.ytdTaxesPaid = ytdTaxesPaid;
+        this.pretaxDeductions = pretaxDeductions;
     }
 
+    // Getter methods for accessing employee information
     @Override
     public String getName() {
         return name;
@@ -32,50 +44,59 @@ public abstract class Employee implements IEmployee {
 
     @Override
     public double getPayRate() {
-        return payRate.doubleValue();
+        return this.payRate;
     }
 
     @Override
     public double getYTDEarnings() {
-        return ytdEarnings.doubleValue();
+        return this.ytdEarnings;
     }
 
     @Override
     public double getYTDTaxesPaid() {
-        return ytdTaxesPaid.doubleValue();
+        return this.ytdTaxesPaid;
     }
 
     @Override
     public double getPretaxDeductions() {
-        return pretaxDeductions.doubleValue();
+        return this.pretaxDeductions;
     }
 
     @Override
     public abstract String getEmployeeType();
 
-    protected abstract BigDecimal calculateGrossPay(double hoursWorked);
+    protected abstract double calculateGrossPay(double hoursWorked);
 
+    public double roundValue(double val) {
+        BigDecimal bd = new BigDecimal(val).setScale(2, RoundingMode.HALF_UP);
+        val = bd.doubleValue();
+        return val;
+    }
+
+    /**
+     * Process payroll for employee, calculates tax, deduction, net pay.
+     *
+     * @param hoursWorked the hours worked for the pay period
+     * @return Contain payment details
+     */
     @Override
     public IPayStub runPayroll(double hoursWorked) {
         if (hoursWorked < 0) {
             return null;
         }
+        double grossPay = calculateGrossPay(hoursWorked);
 
-        BigDecimal grossPay = calculateGrossPay(hoursWorked);
-        grossPay = grossPay.setScale(2, RoundingMode.HALF_UP);
-        BigDecimal taxableIncome = grossPay.subtract(pretaxDeductions).setScale(2, RoundingMode.HALF_UP).max(BigDecimal.ZERO);
-        BigDecimal taxRate = new BigDecimal(Double.toString(0.2265));
-        BigDecimal taxes = taxableIncome.multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal netPay = taxableIncome.subtract(taxes).setScale(2,RoundingMode.HALF_UP);
+        double taxableIncome = grossPay - pretaxDeductions;
 
-        BigDecimal currentYtdEarnings = ytdEarnings.subtract(grossPay);
-        BigDecimal currentYtdTaxesPaid = ytdTaxesPaid.subtract(taxes);
+        double taxes = roundValue(taxableIncome * 0.2265);
+        double netPay = roundValue(taxableIncome - taxes);
 
-        ytdEarnings = currentYtdEarnings.add(grossPay).setScale(2, RoundingMode.HALF_UP);
-        ytdTaxesPaid = currentYtdTaxesPaid.add(taxes).setScale(2, RoundingMode.HALF_UP);
+        this.ytdEarnings = roundValue(this.ytdEarnings + netPay);
+
+        this.ytdTaxesPaid = roundValue(Math.max(0, this.ytdTaxesPaid + taxes));
 
 
-        return new PayStub(name, netPay.doubleValue(), taxes.doubleValue(), ytdEarnings.doubleValue(), ytdTaxesPaid.doubleValue());
+        return new PayStub(this, netPay, taxes);
     }
 
     @Override
